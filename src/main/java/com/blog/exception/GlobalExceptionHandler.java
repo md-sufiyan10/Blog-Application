@@ -8,10 +8,14 @@ import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.nio.file.AccessDeniedException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestControllerAdvice
@@ -31,6 +35,16 @@ public ResponseEntity<ApiResponseDto> handleDublicateResource(DuplicateResourceE
 public ResponseEntity<ApiResponseDto> handleResourceNotFound(ResourceNotFoundException ex){
       ApiResponseDto response=ApiResponseDto.error(ex.getMessage());
       return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+}
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<ApiResponseDto> handleMethodArgumentException(MethodArgumentNotValidException ex){
+      Map<String ,String> response = new HashMap<>();
+      ex.getBindingResult().getAllErrors().forEach((error)->{
+        String fieldName=((FieldError) error).getField();
+        String message=((FieldError) error).getDefaultMessage();
+       response.put(fieldName,message);
+      });
+      return new ResponseEntity (response,HttpStatus.BAD_REQUEST);
 }
 
 @ExceptionHandler(AccessDeniedException.class)
